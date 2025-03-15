@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
+  </head>
+  <body>
+    <main class="p-4 bg-gray-100 dark:bg-gray-800 h-screen">
+      <button onclick="showPopUp()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Upload File
+      </button>
+
+      <div class="pop backdrop-blur fixed inset-0 flex items-center justify-center bg-black/30 hidden">
+        <form id="uploadForm" method="post" enctype="multipart/form-data">
+          <div class="w-96">
+            <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+              <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                </svg>
+                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                  <span class="font-semibold">Click to upload</span> or drag and drop
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+              </div>
+              <input id="dropzone-file" type="file" class="hidden" name="image" />
+            </label>
+          </div>
+          <div id="error-message" class="text-red-500 text-sm mt-2 hidden"></div>
+          <button type="submit" class="mt-4 w-full px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600">
+            Upload
+          </button>
+        </form>
+
+        <button class="absolute top-4 right-4 text-white text-xl mt-4 px-4 py-2 bg-red-500 rounded-md hover:bg-red-600" onclick="hidePopUp()">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+
+      <div class="files mt-3 flex flex-col gap-4">
+        <% files.forEach((file) => { %>
+          <div class="p-2 cursor-pointer rounded-md bg-gray-300">
+            <h1><%= file.originalname %></h1>
+            <a href="<%= file.path %>" download="<%= file.filename %>">Download <%= file.filename %></a>
+
+          </div>
+        <% }) %>
+      </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+    <script>
+      async function handleFormSubmit(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const errorMessage = document.getElementById('error-message');
+
+        try {
+          const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            alert('File uploaded successfully! URL: ' + result.url);
+            hidePopUp();
+            window.location.reload(); // Reload the page to show the new file
+          } else {
+            errorMessage.textContent = result.message || 'Error uploading file';
+            errorMessage.classList.remove('hidden');
+          }
+        } catch (error) {
+          errorMessage.textContent = 'An error occurred while uploading the file';
+          errorMessage.classList.remove('hidden');
+        }
+      }
+
+      document.getElementById('uploadForm').addEventListener('submit', handleFormSubmit);
+
+      function showPopUp() {
+        document.querySelector('.pop').style.display = 'flex';
+      }
+
+      function hidePopUp() {
+        document.querySelector('.pop').style.display = 'none';
+        document.getElementById('error-message').classList.add('hidden');
+      }
+    </script>
+  </body>
+</html>
